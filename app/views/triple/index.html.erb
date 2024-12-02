@@ -1,0 +1,529 @@
+<div class="container">
+    <div class="column">
+        <div class="header">Subject</div>
+        <input type="text" id="subject-input" placeholder="Enter a subject" oninput="filterList('subject')">
+        <div class="entry-list" id="subject-list"></div>
+    </div>
+
+    <div class="column">
+        <div class="header">Predicate</div>
+        <input type="text" id="predicate-input" placeholder="Enter a predicate" oninput="filterList('predicate')">
+        <div class="entry-list" id="predicate-list"></div>
+    </div>
+
+    <div class="column">
+        <div class="header">Object</div>
+        <input type="text" id="object-input" placeholder="Enter a object" oninput="filterList('object')">
+        <div class="entry-list" id="object-list"></div>
+    </div>
+</div>
+
+<div class="add-button-container">
+    <button id="add-button" onclick="addEntry()">Create triple</button>
+</div>
+
+<div id="status" class="status"></div>
+
+<div class="triples-table-container">
+    <h2>Triple</h2>
+    <div class="search-container">
+        <input type="text" id="triple-search" placeholder="Rechercher dans les triples..." oninput="filterTriples()">
+    </div>
+    <table id="triples-table">
+        <thead>
+            <tr>
+                <th>Subject</th>
+                <th>Predicat</th>
+                <th>Object</th>
+                <th>State</th>
+            </tr>
+        </thead>
+        <tbody id="triples-body">
+            <tr id="preview-row" class="preview-row">
+                <td id="preview-subject"></td>
+                <td id="preview-predicate"></td>
+                <td id="preview-object"></td>
+                <td>Typing in progress</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<style>
+.container {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    gap: 20px;
+}
+
+.column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+input[type="text"] {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.entry-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    margin-top: 5px;
+}
+
+.entry {
+    padding: 5px;
+    cursor: pointer;
+}
+
+.entry:hover {
+    background-color: #f5f5f5;
+}
+
+.add-button-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+#add-button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#add-button:hover {
+    background-color: #45a049;
+}
+
+#add-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.triples-table-container {
+    margin-top: 2rem;
+    padding: 1rem;
+}
+
+.search-container {
+    margin-bottom: 1rem;
+}
+
+#triple-search {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+#triple-search:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.2);
+}
+
+#triples-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+#triples-table th,
+#triples-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+#triples-table th {
+    background-color: #f4f4f4;
+}
+
+#triples-table tr:nth-child(even):not(.preview-row) {
+    background-color: #f9f9f9;
+}
+
+.preview-row {
+    background-color: #fff3e0;
+    font-style: italic;
+}
+
+.preview-row td:last-child {
+    color: #ff9800;
+}
+
+.saved-triple td:last-child {
+    color: #4caf50;
+}
+
+.saved-triple {
+    cursor: pointer;
+}
+
+.saved-triple:hover {
+    background-color: #f5f5f5;
+}
+
+.entry.current {
+    background-color: #e3f2fd;
+    font-weight: bold;
+}
+
+.entry.triple {
+    background-color: #f1f8e9;
+    border-bottom: 1px solid #ddd;
+    padding: 8px 5px;
+    margin-top: 5px;
+}
+
+.entry.triple:hover {
+    background-color: #dcedc8;
+}
+
+.entry.triple .triple-preview {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 3px;
+}
+
+.section-divider {
+    padding: 5px;
+    background-color: #f5f5f5;
+    font-weight: bold;
+    color: #666;
+    border-bottom: 1px solid #ddd;
+}
+
+.hidden {
+    display: none;
+}
+
+.status {
+    display: none;
+    padding: 10px;
+    margin: 10px 20px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.status.success {
+    background-color: #dff0d8;
+    color: #3c763d;
+    border: 1px solid #d6e9c6;
+}
+
+.status.error {
+    background-color: #f2dede;
+    color: #a94442;
+    border: 1px solid #ebccd1;
+}
+</style>
+
+<script>
+    let allAtoms = [];
+    let allTriples = [];
+    let filteredAtoms = {
+        subject: [],
+        predicate: [],
+        object: []
+    };
+
+    // Charger tous les atomes au démarrage
+    window.addEventListener('load', loadAtoms);
+
+    function filterTriples() {
+        const searchTerm = document.getElementById('triple-search').value.toLowerCase();
+        if (searchTerm.length < 1) {
+            // Si la recherche est vide, montrer tous les triples
+            document.querySelectorAll('#triples-body tr.saved-triple').forEach(row => {
+                row.classList.remove('hidden');
+            });
+            return;
+        }
+
+        const rows = document.querySelectorAll('#triples-body tr.saved-triple');
+        
+        rows.forEach(row => {
+            const subject = row.children[0].textContent.toLowerCase();
+            const predicate = row.children[1].textContent.toLowerCase();
+            const object = row.children[2].textContent.toLowerCase();
+            const fullText = `${subject} ${predicate} ${object}`;
+            
+            // Recherche plus souple : vérifie si le terme de recherche est contenu dans n'importe quelle partie
+            const matches = fullText.includes(searchTerm);
+            
+            row.classList.toggle('hidden', !matches);
+        });
+    }
+
+    function filterList(type) {
+        const input = document.getElementById(`${type}-input`);
+        const searchTerm = input.value.toLowerCase();
+        const list = document.getElementById(`${type}-list`);
+        list.innerHTML = '';
+
+        // Créer un Set pour stocker toutes les valeurs uniques
+        const uniqueValues = new Set([...allAtoms]);
+        allTriples.forEach(triple => {
+            uniqueValues.add(triple.subject.label);
+            uniqueValues.add(triple.predicate.label);
+            uniqueValues.add(triple.object.label);
+        });
+
+        // Convertir en tableau et filtrer selon le terme de recherche
+        const filteredValues = Array.from(uniqueValues)
+            .filter(value => value.toLowerCase().includes(searchTerm));
+
+        // Ajouter les valeurs filtrées
+        if (filteredValues.length > 0) {
+            const divider = document.createElement('div');
+            divider.className = 'section-divider';
+            divider.textContent = 'Valeurs disponibles';
+            list.appendChild(divider);
+
+            filteredValues.forEach(value => {
+                const entry = document.createElement('div');
+                entry.className = 'entry';
+                entry.textContent = value;
+                entry.onclick = () => selectEntry(type, value);
+                list.appendChild(entry);
+            });
+        }
+
+        // Ajouter les triples complets comme suggestions
+        let hasTriples = false;
+        allTriples.forEach(triple => {
+            const tripleValue = type === 'subject' ? triple.subject.label :
+                              type === 'predicate' ? triple.predicate.label :
+                              triple.object.label;
+            
+            if (tripleValue.toLowerCase().includes(searchTerm)) {
+                if (!hasTriples) {
+                    const divider = document.createElement('div');
+                    divider.className = 'section-divider';
+                    divider.textContent = 'triples';
+                    list.appendChild(divider);
+                    hasTriples = true;
+                }
+
+                const entry = document.createElement('div');
+                entry.className = 'entry triple';
+                
+                const mainContent = document.createElement('div');
+                mainContent.textContent = tripleValue;
+                
+                const preview = document.createElement('div');
+                preview.className = 'triple-preview';
+                preview.textContent = `triple: ${triple.subject.label} ${triple.predicate.label} ${triple.object.label}`;
+                
+                entry.appendChild(mainContent);
+                entry.appendChild(preview);
+                
+                entry.onclick = () => {
+                    document.getElementById('subject-input').value = triple.subject.label;
+                    document.getElementById('predicate-input').value = triple.predicate.label;
+                    document.getElementById('object-input').value = triple.object.label;
+                    updatePreview();
+                };
+                
+                list.appendChild(entry);
+            }
+        });
+
+        // Mettre à jour la prévisualisation
+        updatePreview();
+    }
+
+    function updatePreview() {
+        const subject = document.getElementById('subject-input').value;
+        const predicate = document.getElementById('predicate-input').value;
+        const object = document.getElementById('object-input').value;
+
+        document.getElementById('preview-subject').textContent = subject;
+        document.getElementById('preview-predicate').textContent = predicate;
+        document.getElementById('preview-object').textContent = object;
+
+        // Afficher ou masquer la ligne de prévisualisation
+        const previewRow = document.getElementById('preview-row');
+        if (subject || predicate || object) {
+            previewRow.style.display = '';
+        } else {
+            previewRow.style.display = 'none';
+        }
+    }
+
+    async function loadAtoms() {
+        try {
+            const response = await fetch('/api/v1/graph');
+            const result = await response.json();
+            
+            // Extraire tous les atomes uniques
+            const atoms = new Set();
+            
+            // Stocker les triples
+            allTriples = result.data.atoms.filter(item => item.type === 'Triple');
+            
+            // Ajouter les Atoms simples
+            result.data.atoms.forEach(item => {
+                if (item.type === 'Atom') {
+                    atoms.add(item.label);
+                }
+            });
+
+            // Extraire les atomes des triples
+            allTriples.forEach(triple => {
+                atoms.add(triple.subject.label);
+                atoms.add(triple.predicate.label);
+                atoms.add(triple.object.label);
+            });
+
+            allAtoms = Array.from(atoms);
+            
+            // Initialiser les listes
+            filterList('subject');
+            filterList('predicate');
+            filterList('object');
+            
+            // Mettre à jour le tableau
+            updateTriplesTable();
+        } catch (error) {
+            console.error('Error while loading atoms:', error);
+            showStatus('Error while loading atoms:', false);
+        }
+    }
+
+    function updateTriplesTable() {
+        const tbody = document.getElementById('triples-body');
+        // Garder seulement la ligne de prévisualisation
+        tbody.innerHTML = `
+            <tr id="preview-row" class="preview-row">
+                <td id="preview-subject"></td>
+                <td id="preview-predicate"></td>
+                <td id="preview-object"></td>
+                <td>Typing in progress</td>
+            </tr>
+        `;
+
+        // Ajouter les triples existants
+        allTriples.forEach(triple => {
+            const row = document.createElement('tr');
+            row.className = 'saved-triple';
+            row.onclick = () => {
+                document.getElementById('subject-input').value = triple.subject.label;
+                document.getElementById('predicate-input').value = triple.predicate.label;
+                document.getElementById('object-input').value = triple.object.label;
+                updatePreview();
+            };
+            row.innerHTML = `
+                <td>${triple.subject.label}</td>
+                <td>${triple.predicate.label}</td>
+                <td>${triple.object.label}</td>
+                <td>Saved</td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        // Restaurer la prévisualisation si nécessaire
+        updatePreview();
+    }
+
+    function selectEntry(type, value) {
+        document.getElementById(`${type}-input`).value = value;
+        updatePreview();
+    }
+
+    async function addEntry() {
+        const subject = document.getElementById('subject-input').value;
+        const predicate = document.getElementById('predicate-input').value;
+        const object = document.getElementById('object-input').value;
+
+        if (subject && predicate && object) {
+            try {
+                document.getElementById('add-button').disabled = true;
+
+                const response = await fetch('/api/v1/graph', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        triple: {
+                            subject_label: subject,
+                            predicate_label: predicate,
+                            object_label: object
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    // Mettre à jour les données avec la réponse du serveur
+                    allTriples = result.data.atoms.filter(item => item.type === 'Triple');
+                    
+                    // Mettre à jour les atomes
+                    const atoms = new Set();
+                    result.data.atoms.forEach(item => {
+                        if (item.type === 'Atom') {
+                            atoms.add(item.label);
+                        }
+                    });
+                    allTriples.forEach(triple => {
+                        atoms.add(triple.subject.label);
+                        atoms.add(triple.predicate.label);
+                        atoms.add(triple.object.label);
+                    });
+                    allAtoms = Array.from(atoms);
+
+                    // Mettre à jour l'interface
+                    updateTriplesTable();
+                    filterList('subject');
+                    filterList('predicate');
+                    filterList('object');
+
+                    // Effacer les champs
+                    document.getElementById('subject-input').value = '';
+                    document.getElementById('predicate-input').value = '';
+                    document.getElementById('object-input').value = '';
+                    updatePreview();
+
+                    showStatus('Triple successfully created!', true);
+                } else {
+                    const result = await response.json();
+                    showStatus(`Error while creating the triple: ${result.error}`, false);
+                }
+            } catch (error) {
+                showStatus('Server connection error', false);
+                console.error('Error:', error);
+            } finally {
+                document.getElementById('add-button').disabled = false;
+            }
+        }
+    }
+
+    function showStatus(message, isSuccess) {
+        const status = document.getElementById('status');
+        status.textContent = message;
+        status.className = `status ${isSuccess ? 'success' : 'error'}`;
+        status.style.display = 'block';
+
+        setTimeout(() => {
+            status.style.display = 'none';
+        }, 3000);
+    }
+</script>

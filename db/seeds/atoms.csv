@@ -1,0 +1,16 @@
+label,creator_label
+Person,system
+Student,system
+Teacher,system
+Course,system
+HasName,system
+TeachesSubject,system
+EnrolledIn,system
+Mathematics,system
+Physics,system
+Biology,system
+John,system
+Alice,system
+Bob,system
+Dr_Smith,system
+Dr_Jones,system

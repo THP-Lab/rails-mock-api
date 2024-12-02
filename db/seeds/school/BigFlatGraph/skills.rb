@@ -15,7 +15,7 @@ backend = Atom.create!(label: "Backend Development", creator_label: creator.labe
 # Reuse fullstack from students.rb
 fullstack = Atom.find_by(label: "Fullstack")
 testing = Atom.create!(label: "Testing and QA", creator_label: creator.label) # Renamed to avoid conflict
-deployment = Atom.create!(label: "Deployment", creator_label: creator.label)
+deployment = Atom.find_or_create_by!(label: "Deployment", creator_label: creator.label)
 security = Atom.create!(label: "Security", creator_label: creator.label)
 performance = Atom.create!(label: "Performance", creator_label: creator.label)
 architecture = Atom.create!(label: "Architecture", creator_label: creator.label)
