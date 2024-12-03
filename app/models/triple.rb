@@ -15,10 +15,11 @@ class Triple < ApplicationRecord
 
   # Computed ID based on components
   before_validation :set_computed_id
+  validates :id, uniqueness: { message: "This triplet already exists" }
 
   # Label method for when Triple is used as a component
   def label
-    id
+    id.gsub('_', ' ')
   end
 
   private

@@ -1,0 +1,11 @@
+id,subject_type,subject_id,predicate_type,predicate_id,object_type,object_id,creator_label,created_at,updated_at
+"John HasName John",Atom,John,Atom,HasName,Atom,John,system,2024-01-01 10:00:00,2024-01-01 10:00:00
+"Alice HasName Alice",Atom,Alice,Atom,HasName,Atom,Alice,system,2024-01-01 10:00:00,2024-01-01 10:00:00
+"Bob HasName Bob",Atom,Bob,Atom,HasName,Atom,Bob,system,2024-01-01 10:00:00,2024-01-01 10:00:00
+"Dr_Smith HasName Dr_Smith",Atom,Dr_Smith,Atom,HasName,Atom,Dr_Smith,system,2024-01-01 10:00:00,2024-01-01 10:00:00
+"Dr_Jones HasName Dr_Jones",Atom,Dr_Jones,Atom,HasName,Atom,Dr_Jones,system,2024-01-01 10:00:00,2024-01-01 10:00:00
+"Dr_Smith TeachesSubject Mathematics",Atom,Dr_Smith,Atom,TeachesSubject,Atom,Mathematics,system,2024-01-01 10:30:00,2024-01-01 10:30:00
+"Dr_Jones TeachesSubject Physics",Atom,Dr_Jones,Atom,TeachesSubject,Atom,Physics,system,2024-01-01 10:30:00,2024-01-01 10:30:00
+"John EnrolledIn Mathematics",Atom,John,Atom,EnrolledIn,Atom,Mathematics,system,2024-01-01 11:00:00,2024-01-01 11:00:00
+"Alice EnrolledIn Physics",Atom,Alice,Atom,EnrolledIn,Atom,Physics,system,2024-01-01 11:00:00,2024-01-01 11:00:00
+"Bob EnrolledIn Mathematics",Atom,Bob,Atom,EnrolledIn,Atom,Mathematics,system,2024-01-01 11:00:00,2024-01-01 11:00:00

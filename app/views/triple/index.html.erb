@@ -1,0 +1,548 @@
+<div class="container">
+    <div class="column">
+        <div class="header">Subject</div>
+        <input type="text" id="subject-input" placeholder="Enter a subject" oninput="filterList('subject')">
+        <div class="entry-list" id="subject-list"></div>
+    </div>
+
+    <div class="column">
+        <div class="header">Predicate</div>
+        <input type="text" id="predicate-input" placeholder="Enter a predicate" oninput="filterList('predicate')">
+        <div class="entry-list" id="predicate-list"></div>
+    </div>
+
+    <div class="column">
+        <div class="header">Object</div>
+        <input type="text" id="object-input" placeholder="Enter an object" oninput="filterList('object')">
+        <div class="entry-list" id="object-list"></div>
+    </div>
+</div>
+
+<div class="add-button-container">
+    <button id="add-button" onclick="addEntry()">Create Triple</button>
+</div>
+
+<div id="status" class="status"></div>
+
+<div class="triples-table-container">
+    <h2>Existing Triples</h2>
+    <div class="search-container">
+        <input type="text" id="triple-search" placeholder="Search triples..." oninput="filterTriples()">
+    </div>
+    <table id="triples-table">
+        <thead>
+            <tr>
+                <th>Subject</th>
+                <th>Predicate</th>
+                <th>Object</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="triples-body">
+            <tr id="preview-row" class="preview-row">
+                <td id="preview-subject"></td>
+                <td id="preview-predicate"></td>
+                <td id="preview-object"></td>
+                <td>Being entered</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<style>
+.container {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    gap: 20px;
+}
+
+.column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+input[type="text"] {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.entry-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    margin-top: 5px;
+}
+
+.entry {
+    padding: 8px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+.entry:hover {
+    background-color: #f5f5f5;
+}
+
+.add-button-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+#add-button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#add-button:hover {
+    background-color: #45a049;
+}
+
+#add-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.triples-table-container {
+    margin-top: 2rem;
+    padding: 1rem;
+}
+
+.search-container {
+    margin-bottom: 1rem;
+}
+
+#triple-search {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+#triple-search:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.2);
+}
+
+#triples-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+#triples-table th,
+#triples-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+#triples-table th {
+    background-color: #f4f4f4;
+}
+
+#triples-table tr:nth-child(even):not(.preview-row) {
+    background-color: #f9f9f9;
+}
+
+.preview-row {
+    background-color: #fff3e0;
+    font-style: italic;
+}
+
+.preview-row td:last-child {
+    color: #ff9800;
+}
+
+.saved-triple td:last-child {
+    color: #4caf50;
+}
+
+.saved-triple td {
+    cursor: pointer;
+    position: relative;
+}
+
+.saved-triple:hover {
+    background-color: #f5f5f5;
+}
+
+.entry.current {
+    background-color: #e3f2fd;
+    font-weight: bold;
+}
+
+.entry.triple {
+    background-color: #f1f8e9;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 4px;
+}
+
+.entry.triple:hover {
+    background-color: #dcedc8;
+}
+
+.entry.triple .triple-preview {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 3px;
+}
+
+.section-divider {
+    padding: 8px;
+    background-color: #f5f5f5;
+    font-weight: bold;
+    color: #666;
+    border-bottom: 1px solid #ddd;
+}
+
+.hidden {
+    display: none;
+}
+
+.status {
+    display: none;
+    padding: 10px;
+    margin: 10px 20px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.status.success {
+    background-color: #dff0d8;
+    color: #3c763d;
+    border: 1px solid #d6e9c6;
+}
+
+.status.error {
+    background-color: #f2dede;
+    color: #a94442;
+    border: 1px solid #ebccd1;
+}
+
+.triple-value {
+    background-color: #e3f2fd;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-top: 5px;
+    display: inline-block;
+}
+
+.triple-suggestion {
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin-top: 5px;
+    cursor: pointer;
+}
+
+.triple-suggestion:hover {
+    background-color: #e9ecef;
+}
+</style>
+
+<script>
+    let allAtoms = [];
+    let allTriples = [];
+    let filteredAtoms = {
+        subject: [],
+        predicate: [],
+        object: []
+    };
+
+    // Load all atoms on startup
+    window.addEventListener('load', loadAtoms);
+
+    function filterTriples() {
+        const searchTerm = document.getElementById('triple-search').value.toLowerCase();
+        if (searchTerm.length < 1) {
+            document.querySelectorAll('#triples-body tr.saved-triple').forEach(row => {
+                row.classList.remove('hidden');
+            });
+            return;
+        }
+
+        const rows = document.querySelectorAll('#triples-body tr.saved-triple');
+        
+        rows.forEach(row => {
+            const subject = row.children[0].textContent.toLowerCase();
+            const predicate = row.children[1].textContent.toLowerCase();
+            const object = row.children[2].textContent.toLowerCase();
+            const fullText = `${subject} ${predicate} ${object}`;
+            
+            const matches = fullText.includes(searchTerm);
+            
+            row.classList.toggle('hidden', !matches);
+        });
+    }
+
+    function createTripleString(triple) {
+        return `${triple.subject.label} ${triple.predicate.label} ${triple.object.label}`;
+    }
+
+    function filterList(type) {
+        const input = document.getElementById(`${type}-input`);
+        const searchTerm = input.value.toLowerCase();
+        const list = document.getElementById(`${type}-list`);
+        list.innerHTML = '';
+
+        // Add complete triples as suggestions first
+        const triplesSection = document.createElement('div');
+        triplesSection.className = 'section-divider';
+        triplesSection.textContent = 'Complete Triples';
+        list.appendChild(triplesSection);
+
+        const matchingTriples = allTriples.filter(triple => {
+            const tripleString = createTripleString(triple).toLowerCase();
+            return tripleString.includes(searchTerm);
+        });
+
+        matchingTriples.forEach(triple => {
+            const tripleString = createTripleString(triple);
+            const entry = document.createElement('div');
+            entry.className = 'entry triple';
+            entry.innerHTML = `
+                <div>Use complete triple:</div>
+                <div class="triple-value">${tripleString}</div>
+            `;
+            entry.onclick = () => {
+                document.getElementById(`${type}-input`).value = tripleString;
+                updatePreview();
+            };
+            list.appendChild(entry);
+        });
+
+        // Then add individual atoms
+        const atomsSection = document.createElement('div');
+        atomsSection.className = 'section-divider';
+        atomsSection.textContent = 'Individual Atoms';
+        list.appendChild(atomsSection);
+
+        // Create a Set to store all unique values
+        const uniqueValues = new Set([...allAtoms]);
+        allTriples.forEach(triple => {
+            uniqueValues.add(triple.subject.label);
+            uniqueValues.add(triple.predicate.label);
+            uniqueValues.add(triple.object.label);
+        });
+
+        // Filter and display individual atoms
+        Array.from(uniqueValues)
+            .filter(value => value.toLowerCase().includes(searchTerm))
+            .forEach(value => {
+                const entry = document.createElement('div');
+                entry.className = 'entry';
+                entry.textContent = value;
+                entry.onclick = () => selectEntry(type, value);
+                list.appendChild(entry);
+            });
+
+        // Update preview
+        updatePreview();
+    }
+
+    function updatePreview() {
+        const subject = document.getElementById('subject-input').value;
+        const predicate = document.getElementById('predicate-input').value;
+        const object = document.getElementById('object-input').value;
+
+        document.getElementById('preview-subject').textContent = subject;
+        document.getElementById('preview-predicate').textContent = predicate;
+        document.getElementById('preview-object').textContent = object;
+
+        // Show or hide preview row
+        const previewRow = document.getElementById('preview-row');
+        if (subject || predicate || object) {
+            previewRow.style.display = '';
+        } else {
+            previewRow.style.display = 'none';
+        }
+    }
+
+    async function loadAtoms() {
+        try {
+            const response = await fetch('/api/v1/graph');
+            const result = await response.json();
+            
+            // Extract all unique atoms
+            const atoms = new Set();
+            
+            // Store triples
+            allTriples = result.data.atoms.filter(item => item.type === 'Triple');
+            
+            // Add simple Atoms
+            result.data.atoms.forEach(item => {
+                if (item.type === 'Atom') {
+                    atoms.add(item.label);
+                }
+            });
+
+            // Extract atoms from triples
+            allTriples.forEach(triple => {
+                atoms.add(triple.subject.label);
+                atoms.add(triple.predicate.label);
+                atoms.add(triple.object.label);
+            });
+
+            allAtoms = Array.from(atoms);
+            
+            // Initialize lists
+            filterList('subject');
+            filterList('predicate');
+            filterList('object');
+            
+            // Update table
+            updateTriplesTable();
+        } catch (error) {
+            console.error('Error loading atoms:', error);
+            showStatus('Error loading atoms', false);
+        }
+    }
+
+    function updateTriplesTable() {
+        const tbody = document.getElementById('triples-body');
+        // Keep only preview row
+        tbody.innerHTML = `
+            <tr id="preview-row" class="preview-row">
+                <td id="preview-subject"></td>
+                <td id="preview-predicate"></td>
+                <td id="preview-object"></td>
+                <td>Being entered</td>
+            </tr>
+        `;
+
+        // Add existing triples
+        allTriples.forEach(triple => {
+            const row = document.createElement('tr');
+            row.className = 'saved-triple';
+            
+            const tripleString = createTripleString(triple);
+            
+            // Create cells individually
+            const subjectCell = document.createElement('td');
+            subjectCell.textContent = triple.subject.label;
+            subjectCell.onclick = () => selectEntry('subject', tripleString);
+
+            const predicateCell = document.createElement('td');
+            predicateCell.textContent = triple.predicate.label;
+            predicateCell.onclick = () => selectEntry('predicate', tripleString);
+
+            const objectCell = document.createElement('td');
+            objectCell.textContent = triple.object.label;
+            objectCell.onclick = () => selectEntry('object', tripleString);
+
+            const stateCell = document.createElement('td');
+            stateCell.textContent = 'Saved';
+
+            row.appendChild(subjectCell);
+            row.appendChild(predicateCell);
+            row.appendChild(objectCell);
+            row.appendChild(stateCell);
+            
+            tbody.appendChild(row);
+        });
+
+        // Restore preview if needed
+        updatePreview();
+    }
+
+    function selectEntry(type, value) {
+        document.getElementById(`${type}-input`).value = value;
+        updatePreview();
+    }
+
+    async function addEntry() {
+        const subject = document.getElementById('subject-input').value;
+        const predicate = document.getElementById('predicate-input').value;
+        const object = document.getElementById('object-input').value;
+
+        if (subject && predicate && object) {
+            try {
+                document.getElementById('add-button').disabled = true;
+
+                const response = await fetch('/api/v1/graph', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        triple: {
+                            subject_label: subject,
+                            predicate_label: predicate,
+                            object_label: object
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    // Update data with server response
+                    allTriples = result.data.atoms.filter(item => item.type === 'Triple');
+                    
+                    // Update atoms
+                    const atoms = new Set();
+                    result.data.atoms.forEach(item => {
+                        if (item.type === 'Atom') {
+                            atoms.add(item.label);
+                        }
+                    });
+                    allTriples.forEach(triple => {
+                        atoms.add(triple.subject.label);
+                        atoms.add(triple.predicate.label);
+                        atoms.add(triple.object.label);
+                    });
+                    allAtoms = Array.from(atoms);
+
+                    // Update interface
+                    updateTriplesTable();
+                    filterList('subject');
+                    filterList('predicate');
+                    filterList('object');
+
+                    // Clear fields
+                    document.getElementById('subject-input').value = '';
+                    document.getElementById('predicate-input').value = '';
+                    document.getElementById('object-input').value = '';
+                    updatePreview();
+
+                    showStatus('Triple created successfully!', true);
+                } else {
+                    const result = await response.json();
+                    showStatus(`Error creating triple: ${result.error}`, false);
+                }
+            } catch (error) {
+                showStatus('Server connection error', false);
+                console.error('Error:', error);
+            } finally {
+                document.getElementById('add-button').disabled = false;
+            }
+        }
+    }
+
+    function showStatus(message, isSuccess) {
+        const status = document.getElementById('status');
+        status.textContent = message;
+        status.className = `status ${isSuccess ? 'success' : 'error'}`;
+        status.style.display = 'block';
+
+        setTimeout(() => {
+            status.style.display = 'none';
+        }, 3000);
+    }
+</script>
